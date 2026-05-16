@@ -1,0 +1,20 @@
+name: Lighthouse CI
+on: [push]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build
+      - uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            http://localhost:3000/beranda
+            http://localhost:3000/riwayat
+          budgetPath: ./lighthouse-budget.json
+          uploadArtifacts: true
