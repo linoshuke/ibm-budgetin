@@ -111,7 +111,7 @@ export default function StatisticsClient() {
   if (isAnonymous) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <LockWidget message="Laporan lengkap tersedia setelah Anda login." />
+        <LockWidget messageKey="lock.reports" />
       </div>
     );
   }

@@ -39,12 +39,12 @@ export default function AddWalletDialog() {
         category: values.category,
         location: values.location ?? "",
       });
-      pushToast({ title: "Dompet ditambahkan", variant: "success" });
+      pushToast({ title: "toast.wallet_added", variant: "success" });
       reset();
       closeModal("addWallet");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Terjadi kesalahan";
-      pushToast({ title: "Gagal menambah dompet", description: message, variant: "error" });
+      pushToast({ title: "toast.add_wallet_failed", description: message, variant: "error" });
     }
   };
 

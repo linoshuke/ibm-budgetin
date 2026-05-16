@@ -24,12 +24,12 @@ export default function DeleteWalletDialog({ walletId, walletName }: DeleteWalle
     setLoading(true);
     try {
       await deleteWallet(walletId);
-      pushToast({ title: "Dompet dihapus", variant: "success" });
+      pushToast({ title: "toast.wallet_deleted", variant: "success" });
       setOpen(false);
       setConfirmText("");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Terjadi kesalahan";
-      pushToast({ title: "Gagal menghapus dompet", description: message, variant: "error" });
+      pushToast({ title: "toast.delete_wallet_failed", description: message, variant: "error" });
     } finally {
       setLoading(false);
     }

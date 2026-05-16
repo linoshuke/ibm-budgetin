@@ -66,11 +66,12 @@ export default function HomeClient() {
 
     return sorted.slice(0, 5).map((item) => {
       const category = categoryMap.get(item.categoryId);
-      const title = (item.note ?? "").trim() || category?.name || t("common.transaction");
+      const categoryName = category?.name ? t(`category.${category.name}`, category.name) : undefined;
+      const title = (item.note ?? "").trim() || categoryName || t("common.transaction");
       const amountValue = Math.abs(item.amount);
       return {
         title,
-        category: category?.name ?? t("common.uncategorized"),
+        category: categoryName ?? t("common.uncategorized"),
         date: formatDate(item.date, true),
         amount: amountValue,
         type: item.type,
@@ -92,7 +93,8 @@ export default function HomeClient() {
 
     return upcoming.map((item) => {
       const category = categoryMap.get(item.categoryId);
-      const title = (item.note ?? "").trim() || category?.name || t("home.upcomingBills");
+      const categoryName = category?.name ? t(`category.${category.name}`, category.name) : undefined;
+      const title = (item.note ?? "").trim() || categoryName || t("home.upcomingBills");
       const dateValue = new Date(item.date);
       const diffDays = Math.max(0, Math.ceil((dateValue.getTime() - todayStart.getTime()) / DAY_MS));
       const meta =

@@ -12,9 +12,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getPublicOrigin } from "@/lib/public-url";
 import { validatePassword } from "@/lib/validators";
+import { useI18n } from "@/hooks/useI18n";
 
-function getProvider(user: User | null) {
-  if (user?.is_anonymous) return "anonim";
+function getProvider(user: User | null, t: (key: string) => string) {
+  if (user?.is_anonymous) return t("profile.anonymous");
   const providers = user?.app_metadata?.providers as string[] | undefined;
   return providers?.[0] ?? "email";
 }
@@ -26,6 +27,7 @@ export default function ProfilePage() {
   const categories = useBudgetStore((state) => state.categories);
   const wallets = useBudgetStore((state) => state.wallets);
   const { user: authUser, loading: authLoading, displayName, avatarUrl, initials, isAnonymous } = useAuth();
+  const { t } = useI18n();
   const loadingUser = authLoading;
 
   const [name, setName] = useState("");
@@ -106,7 +108,7 @@ export default function ProfilePage() {
     }
   }, [isAnonymous, router, searchParams]);
 
-  const provider = getProvider(authUser ?? null);
+  const provider = getProvider(authUser ?? null, t);
   const providers = (authUser?.app_metadata?.providers as string[] | undefined) ?? [];
   const isEmailProvider = providers.includes("email");
   const identities = authUser?.identities ?? [];
@@ -115,9 +117,9 @@ export default function ProfilePage() {
   const canUnlinkGoogle = hasGoogle && isEmailProvider;
   const hasPasswordLogin = isEmailProvider;
   const canChangePassword = !isAnonymous && Boolean(authUser?.email);
-  const passwordActionLabel = hasPasswordLogin ? "Ubah Password" : "Buat Password";
+  const passwordActionLabel = hasPasswordLogin ? t("profile.changePassword") : t("profile.createPassword");
   const isVerified = Boolean(authUser?.email_confirmed_at);
-  const verificationLabel = isAnonymous ? "Anonim" : isVerified ? "Terverifikasi" : "Belum terverifikasi";
+  const verificationLabel = isAnonymous ? t("profile.anonymous") : isVerified ? t("profile.verified") : t("profile.unverified");
   const createdDate = authUser?.created_at ? formatDate(authUser.created_at, true) : "-";
   const nextParam = pathname && pathname !== "/" ? `?next=${encodeURIComponent(pathname)}` : "";
   const emailChanged = Boolean(authUser?.email && email.trim() && email.trim() !== authUser.email);
@@ -465,7 +467,7 @@ export default function ProfilePage() {
   if (!authUser && !loadingUser) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <LockWidget message="Masuk untuk mengelola profil." />
+        <LockWidget messageKey="lock.profile" />
       </div>
     );
   }
@@ -474,8 +476,8 @@ export default function ProfilePage() {
     <AuthGate requireAuth>
       <div className="space-y-8">
         <header className="space-y-2">
-          <h1 className="font-headline text-3xl font-extrabold text-on-surface">Profil</h1>
-          <p className="text-sm text-on-surface-variant">Kelola informasi akun dan keamanan Anda.</p>
+          <h1 className="font-headline text-3xl font-extrabold text-on-surface">{t("profile.title")}</h1>
+          <p className="text-sm text-on-surface-variant">{t("profile.subtitle")}</p>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-12">
@@ -496,9 +498,9 @@ export default function ProfilePage() {
                 )}
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Profil</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">{t("profile.title")}</p>
                 <h2 className="text-xl font-semibold text-on-surface">
-                  {name.trim() || "Pengguna Budgetin"}
+                  {name.trim() || t("profile.defaultName")}
                 </h2>
                 <p className="text-sm text-on-surface-variant">{email || "-"}</p>
               </div>
@@ -506,13 +508,13 @@ export default function ProfilePage() {
 
             <div className="mt-4 flex flex-wrap gap-2 text-xs text-on-surface-variant">
               <span className="rounded-full border border-outline-variant/20 bg-surface-container px-3 py-1">
-                Provider: {provider}
+                {t("profile.provider")} {provider}
               </span>
               <span className="rounded-full border border-outline-variant/20 bg-surface-container px-3 py-1">
-                Verifikasi: {verificationLabel}
+                {t("profile.verification")} {verificationLabel}
               </span>
               <span className="rounded-full border border-outline-variant/20 bg-surface-container px-3 py-1">
-                Bergabung: {createdDate}
+                {t("profile.joined")} {createdDate}
               </span>
             </div>
 
@@ -522,16 +524,16 @@ export default function ProfilePage() {
               disabled={loadingUser}
               className="mt-5 w-full rounded-lg bg-primary px-4 py-3 text-sm font-bold text-on-primary transition-colors hover:bg-primary/90 disabled:opacity-60"
             >
-              Ubah Profil
+              {t("profile.editProfile")}
             </button>
           </section>
 
           <section className="space-y-6 lg:col-span-8">
             {isAnonymous ? (
               <div className="rounded-2xl border border-primary/20 bg-primary/10 p-6">
-                <h2 className="font-headline text-lg font-bold text-on-surface">Simpan Data Permanen</h2>
+                <h2 className="font-headline text-lg font-bold text-on-surface">{t("profile.anonWarningTitle")}</h2>
                 <p className="mt-2 text-sm text-on-surface-variant">
-                  Akun Anda masih anonim. Simpan permanen agar data transaksi Anda tetap aman, bisa login di perangkat lain, dan mudah dipulihkan.
+                  {t("profile.anonWarningDesc")}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <button
@@ -539,24 +541,23 @@ export default function ProfilePage() {
                     onClick={handleUpgradeAccount}
                     className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary"
                   >
-                    Simpan Data Permanen
+                    {t("profile.savePermanent")}
                   </button>
                   <button
                     type="button"
                     onClick={() => router.push((`/login${nextParam}`) as import("next").Route)}
                     className="text-sm font-semibold text-on-surface-variant underline underline-offset-4 decoration-outline-variant/40 transition hover:text-on-surface hover:decoration-outline-variant/70"
                   >
-                    Punya akun? Login
+                    {t("profile.haveAccountLogin")}
                   </button>
                 </div>
                 <p className="mt-3 text-xs text-on-surface-variant">
-                  Catatan: Untuk menyimpan data anonim ini, Anda harus menggunakan kredensial baru (email/Google yang belum pernah dipakai di Budgetin).
-                  Login ke akun lama akan berpindah akun dan data anonim ini tidak ikut.
+                  {t("profile.anonNote")}
                 </p>
               </div>
             ) : null}
             <div className="rounded-2xl border border-outline-variant/5 bg-surface-container-low p-6">
-              <h2 className="font-headline text-lg font-bold text-on-surface">Account Management</h2>
+              <h2 className="font-headline text-lg font-bold text-on-surface">{t("profile.accountManagement")}</h2>
               {linkError ? (
                 <p className="mt-4 rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-sm text-error">
                   {linkError}
@@ -573,7 +574,7 @@ export default function ProfilePage() {
                   className="flex w-full items-center justify-between rounded-xl border border-outline-variant/10 bg-surface-container px-4 py-3 text-sm text-on-surface transition-colors hover:bg-surface-container-high"
                   onClick={() => router.push("/pengaturan")}
                 >
-                  Pengaturan Aplikasi
+                  {t("profile.appSettings")}
                   <span className="text-on-surface-variant">&gt;</span>
                 </button>
                 {isAnonymous ? (
@@ -584,11 +585,11 @@ export default function ProfilePage() {
                       onClick={handleUpgradeAccount}
                       disabled={loadingUser || !authUser}
                     >
-                      Simpan Data Permanen
+                      {t("profile.savePermanent")}
                       <span className="text-on-surface-variant">&gt;</span>
                     </button>
                     <p className="text-xs text-on-surface-variant">
-                      Pilih email/Google baru untuk mengunci data anonim ini. Jika Anda sudah punya akun, login hanya untuk berpindah akun (data anonim ini tidak ikut).
+                      {t("profile.anonSaveDesc")}
                     </p>
                   </>
                 ) : (
@@ -599,17 +600,17 @@ export default function ProfilePage() {
                       onClick={hasGoogle ? handleUnlinkGoogle : handleLinkGoogle}
                       disabled={linkingGoogle || loadingUser || !authUser}
                     >
-                      {hasGoogle ? "Putuskan Google" : "Hubungkan Google"}
+                      {hasGoogle ? t("profile.disconnectGoogle") : t("profile.connectGoogle")}
                       <span className="text-on-surface-variant">&gt;</span>
                     </button>
                     {!hasGoogle ? (
                       <p className="text-xs text-on-surface-variant">
-                        Hubungkan Google agar login lebih cepat tanpa kata sandi.
+                        {t("profile.connectGoogleDesc")}
                       </p>
                     ) : null}
                     {hasGoogle && !canUnlinkGoogle ? (
                       <p className="text-xs text-on-surface-variant">
-                        Tambahkan login email/password sebelum memutuskan Google agar akses tetap aman.
+                        {t("profile.disconnectGoogleDesc")}
                       </p>
                     ) : null}
                   </>
@@ -626,8 +627,8 @@ export default function ProfilePage() {
                 {!canChangePassword ? (
                   <p className="text-xs text-on-surface-variant">
                     {isAnonymous
-                      ? "Simpan permanen dulu untuk mengatur kata sandi."
-                      : "Buat password agar bisa login dengan email juga."}
+                      ? t("profile.passwordAnonDesc")
+                      : t("profile.passwordUserDesc")}
                   </p>
                 ) : null}
                 <button
@@ -635,7 +636,7 @@ export default function ProfilePage() {
                   className="flex w-full items-center justify-between rounded-xl border border-outline-variant/10 bg-surface-container px-4 py-3 text-sm text-on-surface transition-colors hover:bg-surface-container-high"
                   onClick={exportCsv}
                 >
-                  Ekspor Data
+                  {t("profile.exportData")}
                   <span className="text-on-surface-variant">&gt;</span>
                 </button>
                 <button
@@ -644,17 +645,16 @@ export default function ProfilePage() {
                   onClick={isAnonymous ? () => setShowLogoutModal(true) : executeLogout}
                   disabled={loggingOut}
                 >
-                  {loggingOut ? "Logout..." : "Logout"}
+                  {loggingOut ? t("profile.loggingOut") : t("profile.logout")}
                   <span>&gt;</span>
                 </button>
               </div>
             </div>
 
             <div className="rounded-2xl border border-error/30 bg-error/10 p-6">
-              <h2 className="font-headline text-lg font-bold text-error">Danger Zone</h2>
+              <h2 className="font-headline text-lg font-bold text-error">{t("profile.dangerZone")}</h2>
               <p className="mt-2 text-sm text-error/80">
-                Menghapus data akan menghapus transaksi, dompet, kategori, goals, dan target budget yang tersimpan di akun ini.
-                Akun login Anda akan tetap ada, tetapi data Budgetin akan kembali kosong.
+                {t("profile.dangerZoneDesc")}
               </p>
               <button
                 type="button"
@@ -665,7 +665,7 @@ export default function ProfilePage() {
                   setShowPurgeModal(true);
                 }}
               >
-                Hapus Semua Data Budgetin
+                {t("profile.deleteAllData")}
               </button>
             </div>
           </section>
@@ -674,7 +674,7 @@ export default function ProfilePage() {
 
       <Modal
         open={showUpgradeModal}
-        title="Simpan Data Permanen"
+        title={t("profile.modal.upgrade.title")}
         onClose={() => {
           setShowUpgradeModal(false);
           setShowGoogleLinkConflictCta(false);
@@ -688,10 +688,9 @@ export default function ProfilePage() {
               role="alert"
               aria-live="polite"
             >
-              <h3 className="text-base font-bold text-error">Akun Google sudah terhubung ke akun lain</h3>
+              <h3 className="text-base font-bold text-error">{t("profile.modal.upgrade.conflictTitle")}</h3>
               <p className="mt-2 text-sm text-on-surface-variant">
-                Akun Google ini sudah terhubung ke akun lain. Untuk menyimpan data anonim ini, gunakan akun Google lain
-                (yang belum pernah dipakai di Budgetin) atau simpan dengan email baru.
+                {t("profile.modal.upgrade.conflictDesc")}
               </p>
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 <button
@@ -700,7 +699,7 @@ export default function ProfilePage() {
                   onClick={() => handleLinkGoogle()}
                   disabled={linkingGoogle || upgradingAccount}
                 >
-                  Pilih akun Google lain
+                  {t("profile.modal.upgrade.chooseOtherGoogle")}
                 </button>
                 <button
                   type="button"
@@ -716,7 +715,7 @@ export default function ProfilePage() {
                   }}
                   disabled={upgradingAccount || linkingGoogle}
                 >
-                  Simpan dengan email baru
+                  {t("profile.modal.upgrade.saveWithEmail")}
                 </button>
               </div>
             </div>
@@ -730,12 +729,12 @@ export default function ProfilePage() {
           ) : null}
 
           <div className="rounded-2xl border border-outline-variant/10 bg-surface-container px-4 py-4">
-            <h3 className="text-sm font-bold text-on-surface">Opsi 1 (Rekomendasi): Hubungkan Google</h3>
+            <h3 className="text-sm font-bold text-on-surface">{t("profile.modal.upgrade.opt1Title")}</h3>
             <p className="mt-1 text-xs text-on-surface-variant">
-              Login lebih cepat tanpa kata sandi, dan tetap menggunakan data transaksi yang sama.
+              {t("profile.modal.upgrade.opt1Desc1")}
             </p>
             <p className="mt-2 text-xs text-on-surface-variant">
-              Penting: pilih akun Google yang belum pernah dipakai di Budgetin. Akun Google yang sudah terdaftar tidak bisa digunakan untuk menyimpan data anonim ini.
+              {t("profile.modal.upgrade.opt1Desc2")}
             </p>
             <button
               type="button"
@@ -743,35 +742,35 @@ export default function ProfilePage() {
               disabled={linkingGoogle || upgradingAccount}
               className="mt-3 w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-60"
             >
-              {linkingGoogle ? "Menghubungkan..." : "Hubungkan Google"}
+              {linkingGoogle ? t("profile.modal.upgrade.connecting") : t("profile.modal.upgrade.connectGoogle")}
             </button>
           </div>
 
           <div className="rounded-2xl border border-outline-variant/10 bg-surface-container px-4 py-4">
-            <h3 className="text-sm font-bold text-on-surface">Opsi 2: Email &amp; Password</h3>
+            <h3 className="text-sm font-bold text-on-surface">{t("profile.modal.upgrade.opt2Title")}</h3>
             <p className="mt-1 text-xs text-on-surface-variant">
-              Kami akan mengubah akun anonim ini menjadi akun permanen. Anda perlu verifikasi email.
+              {t("profile.modal.upgrade.opt2Desc1")}
             </p>
             <p className="mt-2 text-xs text-on-surface-variant">
-              Gunakan email yang belum pernah dipakai di Budgetin. Jika email sudah terdaftar, Anda perlu memakai email lain.
+              {t("profile.modal.upgrade.opt2Desc2")}
             </p>
 
             <div className="mt-4 grid gap-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
-                Email
+                {t("profile.modal.upgrade.email")}
                 <input
                   id="upgrade-email"
                   type="email"
                   value={upgradeEmail}
                   onChange={(event) => setUpgradeEmail(event.target.value)}
-                  placeholder="nama@email.com"
+                  placeholder="name@email.com"
                   className="mt-2 w-full rounded-lg border border-outline-variant/20 bg-surface-container-high px-3 py-2 text-sm text-on-surface"
                   disabled={upgradingAccount}
                 />
               </label>
 
               <label className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
-                Password Baru
+                {t("profile.modal.upgrade.newPassword")}
                 <input
                   type="password"
                   value={upgradePassword}
@@ -783,12 +782,12 @@ export default function ProfilePage() {
               </label>
 
               <label className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
-                Konfirmasi Password
+                {t("profile.modal.upgrade.confirmPassword")}
                 <input
                   type="password"
                   value={upgradeConfirmPassword}
                   onChange={(event) => setUpgradeConfirmPassword(event.target.value)}
-                  placeholder="Ulangi password"
+                  placeholder={t("profile.modal.password.confirmPasswordPlaceholder")}
                   className="mt-2 w-full rounded-lg border border-outline-variant/20 bg-surface-container-high px-3 py-2 text-sm text-on-surface"
                   disabled={upgradingAccount}
                 />
@@ -801,7 +800,7 @@ export default function ProfilePage() {
               disabled={upgradingAccount || linkingGoogle}
               className="mt-4 w-full rounded-lg border border-outline-variant/25 bg-surface-container-high px-4 py-2 text-sm font-semibold text-on-surface transition hover:bg-surface-container-high/70 disabled:opacity-60"
             >
-              {upgradingAccount ? "Menyimpan..." : "Simpan dengan Email"}
+              {upgradingAccount ? t("profile.modal.upgrade.saving") : t("profile.modal.upgrade.saveBtn")}
             </button>
           </div>
         </div>
@@ -809,16 +808,15 @@ export default function ProfilePage() {
 
       <Modal
         open={showLogoutModal}
-        title="Konfirmasi Logout"
+        title={t("profile.modal.logout.title")}
         onClose={() => setShowLogoutModal(false)}
         sizeClassName="max-w-md"
       >
         <div className="space-y-4">
           <div className="rounded-xl border border-error/30 bg-error/10 p-4">
-            <p className="text-sm font-semibold text-error">Anda sedang memakai akun anonim.</p>
+            <p className="text-sm font-semibold text-error">{t("profile.modal.logout.anonWarning")}</p>
             <p className="mt-1 text-sm text-error/80">
-              Jika logout sekarang, Anda berpotensi kehilangan akses ke data anonim ini di perangkat ini.
-              Simpan data permanen terlebih dahulu bila ingin data tetap aman.
+              {t("profile.modal.logout.anonDesc")}
             </p>
           </div>
 
@@ -829,7 +827,7 @@ export default function ProfilePage() {
               className="rounded-lg border border-outline-variant/30 px-4 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface"
               disabled={loggingOut}
             >
-              Batal
+              {t("profile.modal.logout.cancel")}
             </button>
             <button
               type="button"
@@ -837,7 +835,7 @@ export default function ProfilePage() {
               className="rounded-lg bg-error px-4 py-2 text-sm font-semibold text-on-error disabled:opacity-60"
               disabled={loggingOut}
             >
-              {loggingOut ? "Logout..." : "Logout Sekarang"}
+              {loggingOut ? t("profile.modal.logout.loggingOut") : t("profile.modal.logout.logoutBtn")}
             </button>
           </div>
         </div>
@@ -845,7 +843,7 @@ export default function ProfilePage() {
 
       <Modal
         open={showEditName}
-        title="Ubah Profil"
+        title={t("profile.modal.edit.title")}
         onClose={() => setShowEditName(false)}
         sizeClassName="max-w-md"
       >
@@ -862,47 +860,47 @@ export default function ProfilePage() {
           ) : null}
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
-              Nama Tampilan
+              {t("profile.modal.edit.displayName")}
             </label>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Nama lengkap"
+              placeholder={t("profile.modal.edit.namePlaceholder")}
               className="w-full rounded-lg border border-outline-variant/20 bg-surface-container px-3 py-2 text-sm text-on-surface"
               disabled={loadingUser}
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Email</label>
+            <label className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">{t("profile.modal.edit.email")}</label>
             <input
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="nama@email.com"
+              placeholder="name@email.com"
               className="w-full rounded-lg border border-outline-variant/20 bg-surface-container px-3 py-2 text-sm text-on-surface disabled:opacity-60"
               disabled={loadingUser || isAnonymous || !isEmailProvider}
             />
             {!isAnonymous && !isEmailProvider ? (
               <p className="text-xs text-on-surface-variant">
-                Akun OAuth mengelola email dari penyedia. Perubahan email tidak tersedia di sini.
+                {t("profile.modal.edit.oauthWarning")}
               </p>
             ) : null}
           </div>
           {emailChanged ? (
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
-                Kata Sandi Saat Ini
+                {t("profile.modal.edit.currentPassword")}
               </label>
               <input
                 type="password"
                 value={currentPassword}
                 onChange={(event) => setCurrentPassword(event.target.value)}
-                placeholder="Masukkan kata sandi saat ini"
+                placeholder={t("profile.modal.edit.currentPasswordPlaceholder")}
                 className="w-full rounded-lg border border-outline-variant/20 bg-surface-container px-3 py-2 text-sm text-on-surface"
                 disabled={savingAccount || !isEmailProvider}
               />
               <p className="text-xs text-on-surface-variant">
-                Wajib diisi untuk mengganti email.
+                {t("profile.modal.edit.passwordRequired")}
               </p>
             </div>
           ) : null}
@@ -913,7 +911,7 @@ export default function ProfilePage() {
               disabled={savingAccount || loadingUser}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-60"
             >
-              {savingAccount ? "Menyimpan..." : "Simpan"}
+              {savingAccount ? t("profile.modal.edit.saving") : t("profile.modal.edit.saveBtn")}
             </button>
             <button
               type="button"
@@ -921,7 +919,7 @@ export default function ProfilePage() {
               className="rounded-lg border border-outline-variant/30 px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface"
               disabled={savingAccount}
             >
-              Batal
+              {t("profile.modal.edit.cancel")}
             </button>
           </div>
         </div>
@@ -946,25 +944,25 @@ export default function ProfilePage() {
           ) : null}
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
-              Kata Sandi Baru
+              {t("profile.modal.password.newPassword")}
             </label>
             <input
               type="password"
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
-              placeholder="Min. 8 karakter + huruf besar & angka"
+              placeholder={t("profile.modal.password.newPasswordPlaceholder")}
               className="w-full rounded-lg border border-outline-variant/20 bg-surface-container px-3 py-2 text-sm text-on-surface"
             />
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
-              Konfirmasi Kata Sandi
+              {t("profile.modal.password.confirmPassword")}
             </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              placeholder="Ulangi kata sandi"
+              placeholder={t("profile.modal.password.confirmPasswordPlaceholder")}
               className="w-full rounded-lg border border-outline-variant/20 bg-surface-container px-3 py-2 text-sm text-on-surface"
             />
           </div>
@@ -975,7 +973,7 @@ export default function ProfilePage() {
               disabled={savingPassword}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-60"
             >
-              {savingPassword ? "Menyimpan..." : "Simpan"}
+              {savingPassword ? t("profile.modal.password.saving") : t("profile.modal.password.saveBtn")}
             </button>
             <button
               type="button"
@@ -983,7 +981,7 @@ export default function ProfilePage() {
               className="rounded-lg border border-outline-variant/30 px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface"
               disabled={savingPassword}
             >
-              Batal
+              {t("profile.modal.password.cancel")}
             </button>
           </div>
         </div>
@@ -991,7 +989,7 @@ export default function ProfilePage() {
 
       <Modal
         open={showPurgeModal}
-        title="Konfirmasi Hapus Data"
+        title={t("profile.modal.purge.title")}
         onClose={() => setShowPurgeModal(false)}
         sizeClassName="max-w-md"
       >
@@ -1003,16 +1001,18 @@ export default function ProfilePage() {
           ) : null}
 
           <div className="rounded-xl border border-error/30 bg-error/10 p-4">
-            <p className="text-sm font-semibold text-error">Aksi ini tidak bisa dibatalkan.</p>
+            <p className="text-sm font-semibold text-error">{t("profile.modal.purge.warning")}</p>
             <p className="mt-1 text-sm text-error/80">
-              Untuk melanjutkan, ketik <span className="font-bold">HAPUS</span> di bawah ini.
+              {t("profile.modal.purge.instruction").split("{word}")[0]}
+              <span className="font-bold">{t("profile.modal.purge.word")}</span>
+              {t("profile.modal.purge.instruction").split("{word}")[1]}
             </p>
           </div>
 
           <input
             value={purgePhrase}
             onChange={(event) => setPurgePhrase(event.target.value)}
-            placeholder="Ketik HAPUS"
+            placeholder={t("profile.modal.purge.placeholder")}
             className="w-full rounded-lg border border-outline-variant/20 bg-surface-container px-3 py-2 text-sm text-on-surface"
             disabled={purgingData}
           />
@@ -1024,7 +1024,7 @@ export default function ProfilePage() {
               disabled={purgingData}
               className="rounded-lg bg-error px-4 py-2 text-sm font-semibold text-on-error disabled:opacity-60"
             >
-              {purgingData ? "Menghapus..." : "Hapus Sekarang"}
+              {purgingData ? t("profile.modal.purge.deleting") : t("profile.modal.purge.deleteBtn")}
             </button>
             <button
               type="button"
@@ -1032,7 +1032,7 @@ export default function ProfilePage() {
               disabled={purgingData}
               className="rounded-lg border border-outline-variant/30 px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface disabled:opacity-60"
             >
-              Batal
+              {t("profile.modal.purge.cancel")}
             </button>
           </div>
         </div>

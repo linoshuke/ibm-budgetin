@@ -22,10 +22,10 @@ export default function PasswordResetDialog() {
     setLoading(false);
 
     if (error) {
-      pushToast({ title: "Gagal kirim reset", description: error.message, variant: "error" });
+      pushToast({ title: "toast.reset_failed", description: error.message, variant: "error" });
       return;
     }
-    pushToast({ title: "Email reset terkirim", description: "Cek inbox Anda." });
+    pushToast({ title: "toast.reset_sent", description: "toast.reset_sent_desc" });
     closeModal("passwordReset");
   };
 

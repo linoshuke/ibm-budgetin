@@ -8,6 +8,8 @@ import type { Route } from "next";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { getPublicOrigin } from "@/lib/public-url";
 import { validatePassword } from "@/lib/validators";
+import { useAppSettingsStore } from "@/stores/appSettingsStore";
+import { t } from "@/lib/i18n";
 
 /** Sanitasi redirect path untuk mencegah open redirect attack. */
 function sanitizeRedirect(path: string | null): string {
@@ -19,6 +21,7 @@ function sanitizeRedirect(path: string | null): string {
 export default function RegisterClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const language = useAppSettingsStore((state) => state.language);
   const nextPath = useMemo(() => sanitizeRedirect(searchParams.get("next")), [searchParams]);
 
   const oauthInFlight = useRef(false);
@@ -60,13 +63,13 @@ export default function RegisterClient() {
 
     if (!validatePassword(password)) {
       setLoading(false);
-      setError("Kata sandi minimal 8 karakter dengan huruf besar, huruf kecil, dan angka.");
+      setError(t(language, "auth.register.error.passwordReq"));
       return;
     }
 
     if (password !== confirmPassword) {
       setLoading(false);
-      setError("Konfirmasi kata sandi tidak sama.");
+      setError(t(language, "auth.register.error.passwordMatch"));
       return;
     }
 
@@ -130,7 +133,7 @@ export default function RegisterClient() {
         <section className="w-full max-w-md">
           <header className="mb-6 text-center">
             <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-dimmed)]">Budgetin</p>
-            <h1 className="mt-2 text-base font-semibold text-[var(--text-primary)]">Daftar</h1>
+            <h1 className="mt-2 text-base font-semibold text-[var(--text-primary)]">{t(language, "auth.register.title")}</h1>
           </header>
 
           <main className="space-y-6">
@@ -159,9 +162,9 @@ export default function RegisterClient() {
                   />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-[var(--text-primary)]">Buat Akun Budgetin</h2>
+              <h2 className="text-2xl font-bold text-[var(--text-primary)]">{t(language, "auth.register.heading")}</h2>
               <p className="text-sm text-[var(--text-dimmed)]">
-                Daftar dengan email atau Google, lalu verifikasi untuk mulai memakai aplikasi.
+                {t(language, "auth.register.description")}
               </p>
             </div>
 
@@ -178,30 +181,30 @@ export default function RegisterClient() {
 
             <form className="space-y-4" onSubmit={handleRegister}>
               <div className="space-y-2">
-                <label className="text-sm text-[var(--text-dimmed)]">Username</label>
+                <label className="text-sm text-[var(--text-dimmed)]">{t(language, "auth.register.username")}</label>
                 <Input
-                  placeholder="Nama lengkap"
+                  placeholder={t(language, "auth.register.fullName")}
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm text-[var(--text-dimmed)]">Email</label>
+                <label className="text-sm text-[var(--text-dimmed)]">{t(language, "auth.register.email")}</label>
                 <Input
                   type="email"
-                  placeholder="nama@email.com"
+                  placeholder="name@email.com"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm text-[var(--text-dimmed)]">Password</label>
+                <label className="text-sm text-[var(--text-dimmed)]">{t(language, "auth.register.password")}</label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Minimal 8 karakter"
+                    placeholder={t(language, "auth.register.passwordMin")}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     required
@@ -212,16 +215,16 @@ export default function RegisterClient() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-dimmed)]"
                     onClick={() => setShowPassword((prev) => !prev)}
                   >
-                    {showPassword ? "Sembunyi" : "Lihat"}
+                    {showPassword ? t(language, "auth.login.hide") : t(language, "auth.login.show")}
                   </button>
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm text-[var(--text-dimmed)]">Konfirmasi Password</label>
+                <label className="text-sm text-[var(--text-dimmed)]">{t(language, "auth.register.confirmPassword")}</label>
                 <div className="relative">
                   <Input
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Ulangi password"
+                    placeholder={t(language, "auth.register.repeatPassword")}
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
                     required
@@ -232,52 +235,52 @@ export default function RegisterClient() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-dimmed)]"
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
                   >
-                    {showConfirmPassword ? "Sembunyi" : "Lihat"}
+                    {showConfirmPassword ? t(language, "auth.login.hide") : t(language, "auth.login.show")}
                   </button>
                 </div>
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Memproses..." : "Daftar"}
+                {loading ? t(language, "auth.login.processing") : t(language, "auth.register.submit")}
               </Button>
             </form>
 
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-[var(--border-soft)]" />
-              <span className="text-xs text-[var(--text-dimmed)]">ATAU</span>
+              <span className="text-xs text-[var(--text-dimmed)]">{t(language, "auth.login.or")}</span>
               <div className="h-px flex-1 bg-[var(--border-soft)]" />
             </div>
 
             <Button type="button" variant="outline" className="w-full" onClick={handleGoogle} disabled={loading}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/google.png" alt="" className="mr-2 inline h-5 w-5" />
-              Daftar dengan Google
+              {t(language, "auth.register.google")}
             </Button>
 
             <p className="text-center text-sm text-[var(--text-dimmed)]">
-              Sudah punya akun?{" "}
+              {t(language, "auth.register.hasAccount")}{" "}
               <Link
                 href={nextPath && nextPath !== "/" ? `/login?next=${encodeURIComponent(nextPath)}` : "/login"}
                 className="font-semibold text-indigo-400 hover:underline"
               >
-                Masuk
+                {t(language, "auth.register.login")}
               </Link>
             </p>
 
             <p className="text-center text-xs text-[var(--text-dimmed)]">
-              Dengan mendaftar, Anda menyetujui{" "}
+              {t(language, "auth.register.agreement")}{" "}
               <Link
                 href={"/privacy" as Route}
                 className="font-medium text-white underline underline-offset-4 decoration-indigo-400/70 transition hover:decoration-indigo-300/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)]"
               >
-                Kebijakan Privasi
+                {t(language, "auth.login.privacy")}
               </Link>{" "}
-              dan{" "}
+              {t(language, "auth.login.and")}{" "}
               <Link
                 href={"/terms" as Route}
                 className="font-medium text-white underline underline-offset-4 decoration-indigo-400/70 transition hover:decoration-indigo-300/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)]"
               >
-                Ketentuan Layanan
+                {t(language, "auth.login.terms")}
               </Link>
               .
             </p>

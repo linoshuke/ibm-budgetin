@@ -19,8 +19,8 @@ export default function HistoryPage() {
   useEffect(() => {
     if (query.error) {
       pushToast({
-        title: "Gagal memuat transaksi",
-        description: "Periksa koneksi Anda lalu coba lagi.",
+        title: "toast.load_transactions_failed",
+        description: "toast.check_connection",
         variant: "error",
       });
     }
@@ -29,7 +29,7 @@ export default function HistoryPage() {
   if (isAnonymous) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <LockWidget message="Riwayat lengkap tersedia setelah Anda login." />
+        <LockWidget messageKey="lock.history" />
       </div>
     );
   }

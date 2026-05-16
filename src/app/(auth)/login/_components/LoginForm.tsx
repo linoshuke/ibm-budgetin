@@ -7,19 +7,21 @@ import type { Route } from "next";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { getPublicOrigin } from "@/lib/public-url";
 import { useSearchParams } from "next/navigation";
+import { useAppSettingsStore, type AppLanguage } from "@/stores/appSettingsStore";
+import { t } from "@/lib/i18n";
 
-function getOAuthErrorMessage(errorCode: string | null): string {
+function getOAuthErrorMessage(errorCode: string | null, language: AppLanguage): string {
   if (!errorCode) return "";
   if (errorCode === "identity_already_exists") {
-    return "Akun Google ini sudah terhubung ke akun lain. Coba gunakan akun Google yang berbeda atau login langsung ke akun tersebut.";
+    return t(language, "auth.login.error.oauthExists");
   }
   if (errorCode === "oauth_exchange_failed") {
-    return "Autentikasi Google gagal. Coba lagi atau muat ulang halaman.";
+    return t(language, "auth.login.error.oauthFailed");
   }
   if (errorCode === "oauth_missing_code") {
-    return "Proses Google dibatalkan atau terjadi kesalahan. Silakan coba lagi.";
+    return t(language, "auth.login.error.oauthCancel");
   }
-  return "Terjadi kesalahan saat login. Silakan coba lagi.";
+  return t(language, "auth.login.error.default");
 }
 
 interface LoginFormProps {
@@ -36,13 +38,15 @@ export default function LoginForm({ nextPath, onForgotPassword }: LoginFormProps
   const oauthInFlight = useRef(false);
   const searchParams = useSearchParams();
 
+  const language = useAppSettingsStore((state) => state.language);
+
   // Tampilkan error dari redirect OAuth (contoh: ?error=oauth_missing_code)
   useEffect(() => {
     const oauthError = searchParams.get("error");
     if (oauthError) {
-      setError(getOAuthErrorMessage(oauthError));
+      setError(getOAuthErrorMessage(oauthError, language));
     }
-  }, [searchParams]);
+  }, [searchParams, language]);
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -61,7 +65,7 @@ export default function LoginForm({ nextPath, onForgotPassword }: LoginFormProps
       }
       window.dispatchEvent(new Event("auth:changed"));
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Gagal login.");
+      setError(error instanceof Error ? error.message : t(language, "auth.login.error.failed"));
     }
   };
 
@@ -97,17 +101,17 @@ export default function LoginForm({ nextPath, onForgotPassword }: LoginFormProps
 
       <form className="space-y-4" onSubmit={handleLogin}>
         <div className="space-y-2">
-          <label className="text-sm text-[var(--text-dimmed)]">Email</label>
+          <label className="text-sm text-[var(--text-dimmed)]">{t(language, "auth.login.email")}</label>
           <Input
             type="email"
-            placeholder="nama@email.com"
+            placeholder="name@email.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm text-[var(--text-dimmed)]">Kata sandi</label>
+          <label className="text-sm text-[var(--text-dimmed)]">{t(language, "auth.login.password")}</label>
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
@@ -122,7 +126,7 @@ export default function LoginForm({ nextPath, onForgotPassword }: LoginFormProps
               className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-dimmed)]"
               onClick={() => setShowPassword((prev) => !prev)}
             >
-              {showPassword ? "Sembunyi" : "Lihat"}
+              {showPassword ? t(language, "auth.login.hide") : t(language, "auth.login.show")}
             </button>
           </div>
         </div>
@@ -132,17 +136,17 @@ export default function LoginForm({ nextPath, onForgotPassword }: LoginFormProps
           className="text-left text-sm text-indigo-400 hover:underline"
           onClick={onForgotPassword}
         >
-          Lupa Password?
+          {t(language, "auth.login.forgotPassword")}
         </button>
 
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Memproses..." : "Masuk"}
+          {loading ? t(language, "auth.login.processing") : t(language, "auth.login.submit")}
         </Button>
       </form>
 
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-[var(--border-soft)]" />
-        <span className="text-xs text-[var(--text-dimmed)]">ATAU</span>
+        <span className="text-xs text-[var(--text-dimmed)]">{t(language, "auth.login.or")}</span>
         <div className="h-px flex-1 bg-[var(--border-soft)]" />
       </div>
 
@@ -155,33 +159,33 @@ export default function LoginForm({ nextPath, onForgotPassword }: LoginFormProps
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/google.png" alt="" className="h-5 w-5" />
-        Lanjutkan dengan Google
+        {t(language, "auth.login.google")}
       </Button>
 
       <p className="text-center text-sm text-[var(--text-dimmed)]">
-        Belum punya akun?{" "}
+        {t(language, "auth.login.noAccount")}{" "}
         <Link
           href={nextPath && nextPath !== "/" ? `/register?next=${encodeURIComponent(nextPath)}` : "/register"}
           className="font-semibold text-indigo-400 hover:underline"
         >
-          Daftar sekarang
+          {t(language, "auth.login.registerNow")}
         </Link>
       </p>
 
       <p className="text-center text-xs text-[var(--text-dimmed)]">
-        Dengan masuk, Anda menyetujui{" "}
+        {t(language, "auth.login.agreement")}{" "}
         <Link
           href={"/privacy" as Route}
           className="font-medium text-white underline underline-offset-4 decoration-indigo-400/70 transition hover:decoration-indigo-300/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)]"
         >
-          Kebijakan Privasi
+          {t(language, "auth.login.privacy")}
         </Link>{" "}
-        dan{" "}
+        {t(language, "auth.login.and")}{" "}
         <Link
           href={"/terms" as Route}
           className="font-medium text-white underline underline-offset-4 decoration-indigo-400/70 transition hover:decoration-indigo-300/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)]"
         >
-          Ketentuan Layanan
+          {t(language, "auth.login.terms")}
         </Link>
         .
       </p>

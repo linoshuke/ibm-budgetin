@@ -1,5 +1,6 @@
 import Button from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
+import { useI18n } from "@/hooks/useI18n";
 import SensitiveCurrency from "@/components/shared/SensitiveCurrency";
 import type { Category } from "@/types/category";
 import type { Transaction } from "@/types/transaction";
@@ -28,6 +29,7 @@ export default function TransactionList({
   onDelete,
   disabled = false,
 }: TransactionListProps) {
+  const { t } = useI18n();
   const categoryMap = new Map(categories.map((item) => [item.id, item]));
   const walletMap = new Map(wallets.map((item) => [item.id, item]));
 
@@ -51,11 +53,11 @@ export default function TransactionList({
             <article key={transaction.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
               <div>
                 <p className="text-sm font-semibold text-[var(--text-primary)]">
-                  {category?.name ?? "Tanpa kategori"}
+                  {category?.name ? t(`category.${category.name}`, category.name) : t("common.uncategorized")}
                 </p>
                 <p className="text-xs text-[var(--text-dimmed)]">
                   {formatDate(transaction.date, true)}
-                  {` - ${walletMap.get(transaction.walletId)?.name ?? "Tanpa dompet"}`}
+                  {` - ${walletMap.get(transaction.walletId)?.name ?? t("common.noWallet")}`}
                   {transaction.note ? ` - ${transaction.note}` : ""}
                 </p>
               </div>
@@ -73,13 +75,13 @@ export default function TransactionList({
 
                 {onEdit ? (
                   <Button variant="ghost" onClick={() => onEdit(transaction.id)} disabled={disabled}>
-                    Edit
+                    {t("common.edit")}
                   </Button>
                 ) : null}
 
                 {onDelete ? (
                   <Button variant="ghost" className="text-rose-400" onClick={() => onDelete(transaction.id)} disabled={disabled}>
-                    Hapus
+                    {t("common.delete")}
                   </Button>
                 ) : null}
               </div>

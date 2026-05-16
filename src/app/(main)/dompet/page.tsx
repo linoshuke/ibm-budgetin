@@ -949,7 +949,7 @@ export default function BudgetsPage() {
   if (!user || isAnonymous) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <LockWidget message="Anggaran & goals tersedia setelah Anda login." />
+        <LockWidget messageKey="lock.budget" />
       </div>
     );
   }

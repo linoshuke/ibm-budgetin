@@ -23,11 +23,11 @@ export default function QuickAddTransactionModal() {
     try {
       setSaving(true);
       await budgetActions.addTransaction(payload);
-      pushToast({ title: "Transaksi tersimpan", variant: "success" });
+      pushToast({ title: "toast.transaction_saved", variant: "success" });
       closeModal("quickAddTransaction");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Terjadi kesalahan.";
-      pushToast({ title: "Gagal menambah transaksi", description: message, variant: "error" });
+      pushToast({ title: "toast.add_transaction_failed", description: message, variant: "error" });
     } finally {
       setSaving(false);
     }

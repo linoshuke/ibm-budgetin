@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import LockWidget from "@/components/LockWidget";
 import { useAuth } from "@/hooks/useAuth";
 import { useNonceStyle } from "@/hooks/useNonceStyle";
+import { useI18n } from "@/hooks/useI18n";
 import { budgetActions, useBudgetStore } from "@/store/budgetStore";
 import type { CategoryType } from "@/types/category";
 
@@ -19,6 +20,7 @@ function CategoryBadge({ color, icon }: { color: string; icon: string }) {
 }
 
 export default function CategoriesPage() {
+  const { t } = useI18n();
   const { isAnonymous } = useAuth();
   const categories = useBudgetStore((state) => state.categories);
   const transactions = useBudgetStore((state) => state.transactions);
@@ -61,7 +63,7 @@ export default function CategoriesPage() {
   if (isAnonymous) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <LockWidget message="Fitur kategori tersedia setelah Anda login." />
+        <LockWidget messageKey="lock.category" />
       </div>
     );
   }
@@ -158,7 +160,7 @@ export default function CategoriesPage() {
                   <div className="flex items-center gap-3">
                     <CategoryBadge color={category.color} icon={category.icon} />
                     <div>
-                      <p className="text-sm font-semibold text-on-surface">{category.name}</p>
+                      <p className="text-sm font-semibold text-on-surface">{t(`category.${category.name}`, category.name)}</p>
                       <p className="text-xs text-on-surface-variant">
                         {category.type === "income"
                           ? "Pemasukan"

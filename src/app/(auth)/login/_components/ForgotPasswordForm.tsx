@@ -4,6 +4,8 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { FormEvent, useState } from "react";
 import { getPublicOrigin } from "@/lib/public-url";
+import { useAppSettingsStore } from "@/stores/appSettingsStore";
+import { t } from "@/lib/i18n";
 
 interface ForgotPasswordFormProps {
   nextPath: string;
@@ -11,6 +13,7 @@ interface ForgotPasswordFormProps {
 }
 
 export default function ForgotPasswordForm({ nextPath, onBack }: ForgotPasswordFormProps) {
+  const language = useAppSettingsStore((state) => state.language);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -38,9 +41,9 @@ export default function ForgotPasswordForm({ nextPath, onBack }: ForgotPasswordF
         throw new Error((payload as { error?: string }).error ?? `HTTP ${response.status}`);
       }
 
-      setNotice("Email reset password sudah dikirim. Cek inbox/spam Anda.");
+      setNotice(t(language, "auth.forgot.emailSent"));
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Gagal mengirim email reset.");
+      setError(error instanceof Error ? error.message : t(language, "auth.forgot.sendFailed"));
     }
   };
 
@@ -59,20 +62,20 @@ export default function ForgotPasswordForm({ nextPath, onBack }: ForgotPasswordF
 
       <form className="space-y-4" onSubmit={handleForgot}>
         <div className="space-y-2">
-          <label className="text-sm text-[var(--text-dimmed)]">Email</label>
+          <label className="text-sm text-[var(--text-dimmed)]">{t(language, "auth.login.email")}</label>
           <Input
             type="email"
-            placeholder="nama@email.com"
+            placeholder="name@email.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
           />
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Mengirim..." : "Kirim Tautan Reset"}
+          {loading ? t(language, "auth.forgot.sending") : t(language, "auth.forgot.submit")}
         </Button>
         <Button type="button" variant="ghost" className="w-full" onClick={onBack}>
-          Kembali ke Login
+          {t(language, "auth.forgot.backToLogin")}
         </Button>
       </form>
     </>

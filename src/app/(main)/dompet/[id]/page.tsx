@@ -33,8 +33,8 @@ export default function WalletDetailPage() {
   useEffect(() => {
     if (query.error) {
       pushToast({
-        title: "Gagal memuat transaksi",
-        description: "Periksa koneksi Anda lalu coba lagi.",
+        title: "toast.load_transactions_failed",
+        description: "toast.check_connection",
         variant: "error",
       });
     }
@@ -61,7 +61,7 @@ export default function WalletDetailPage() {
   if (!user || isAnonymous) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <LockWidget message="Detail dompet tersedia setelah Anda login." />
+        <LockWidget messageKey="lock.wallet" />
       </div>
     );
   }

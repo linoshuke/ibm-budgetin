@@ -4,9 +4,13 @@ import { useEffect } from "react";
 import { useUIStore } from "@/stores/uiStore";
 import { cn } from "@/lib/utils";
 
+import { t } from "@/lib/i18n";
+import { useAppSettingsStore } from "@/stores/appSettingsStore";
+
 export default function ToastHost() {
   const toasts = useUIStore((state) => state.toasts);
   const removeToast = useUIStore((state) => state.removeToast);
+  const language = useAppSettingsStore((state) => state.language);
 
   useEffect(() => {
     const timers = toasts.map((toast) =>
@@ -27,9 +31,13 @@ export default function ToastHost() {
             toast.variant === "info" && "border-sky-400/40",
           )}
         >
-          <p className="font-semibold text-[var(--text-primary)]">{toast.title}</p>
+          <p className="font-semibold text-[var(--text-primary)]">
+            {toast.title.startsWith("toast.") ? t(language, toast.title, toast.title) : toast.title}
+          </p>
           {toast.description ? (
-            <p className="mt-1 text-xs text-[var(--text-dimmed)]">{toast.description}</p>
+            <p className="mt-1 text-xs text-[var(--text-dimmed)]">
+              {toast.description.startsWith("toast.") ? t(language, toast.description, toast.description) : toast.description}
+            </p>
           ) : null}
         </div>
       ))}

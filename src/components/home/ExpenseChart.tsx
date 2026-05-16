@@ -25,15 +25,18 @@ export default function ExpenseChart() {
     return <Skeleton className="h-[340px] w-full rounded-xl" />;
   }
 
-  const chartData = data?.length ? data : [{ name: t("home.noData"), value: 1 }];
-  const total = chartData.reduce((acc, item) => acc + item.value, 0);
+  const hasData = data && data.length > 0;
+  const translatedData = hasData ? data!.map(item => ({ ...item, name: t(`category.${item.name}`, item.name) })) : [];
+  const chartData = hasData ? translatedData : [{ name: t("home.noData"), value: 1 }];
+  const chartTotal = chartData.reduce((acc, item) => acc + item.value, 0);
+  const displayTotal = hasData ? translatedData.reduce((acc, item) => acc + item.value, 0) : 0;
   const topItems = [...chartData]
     .sort((a, b) => b.value - a.value)
     .slice(0, 3)
     .map((item, index) => ({
       ...item,
       color: COLORS[index % COLORS.length],
-      percentage: total ? Math.round((item.value / total) * 100) : 0,
+      percentage: chartTotal ? Math.round((item.value / chartTotal) * 100) : 0,
     }));
 
   return (
@@ -57,7 +60,7 @@ export default function ExpenseChart() {
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-xs font-medium uppercase text-on-surface-variant">{t("home.total")}</span>
           <span className="text-xl font-bold">
-            <SensitiveCurrency value={total} notation="compact" maximumFractionDigits={1} eyeClassName="h-7 w-7" />
+            <SensitiveCurrency value={displayTotal} notation="compact" maximumFractionDigits={1} eyeClassName="h-7 w-7" />
           </span>
         </div>
       </div>

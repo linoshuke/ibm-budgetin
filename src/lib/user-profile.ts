@@ -43,7 +43,7 @@ export function getUserAvatarUrl(user: User | null): string {
 }
 
 export function getUserDisplayName(user: User | null): string {
-  if (!user) return "Tamu";
+  if (!user) return "";
   const metadata = user.user_metadata as Metadata;
   for (const key of NAME_KEYS) {
     const value = readString(metadata, key);
@@ -54,7 +54,7 @@ export function getUserDisplayName(user: User | null): string {
     const username = email.split("@")[0];
     if (username) return username;
   }
-  return "Pengguna";
+  return "";
 }
 
 export function getUserInitials(name?: string, email?: string): string {

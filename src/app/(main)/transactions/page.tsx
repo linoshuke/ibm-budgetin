@@ -366,7 +366,8 @@ function TransactionsPageInner() {
     if (!searchKey) return items;
 
     return items.filter((item) => {
-      const categoryName = categoryMap.get(item.categoryId)?.name ?? "";
+      const categoryRaw = categoryMap.get(item.categoryId)?.name ?? "";
+      const categoryName = categoryRaw ? t(`category.${categoryRaw}`, categoryRaw) : "";
       const walletName = walletMap.get(item.walletId) ?? "";
       const note = item.note ?? "";
       return [categoryName, walletName, note].some((field) => field.toLowerCase().includes(searchKey));
@@ -599,7 +600,11 @@ function TransactionsPageInner() {
                       />
                     </h2>
                     <p className="text-sm text-on-surface-variant">
-                      {largestExpense ? categoryMap.get(largestExpense.categoryId)?.name ?? t("common.uncategorized") : "-"}
+                      {largestExpense 
+                        ? (categoryMap.get(largestExpense.categoryId)?.name 
+                            ? t(`category.${categoryMap.get(largestExpense.categoryId)!.name}`, categoryMap.get(largestExpense.categoryId)!.name) 
+                            : t("common.uncategorized"))
+                        : "-"}
                     </p>
                   </div>
 
@@ -637,10 +642,11 @@ function TransactionsPageInner() {
                   <tbody className="divide-y divide-outline-variant/5">
                         {renderedTransactions.map((transaction) => {
                           const category = categoryMap.get(transaction.categoryId);
+                          const categoryName = category?.name ? t(`category.${category.name}`, category.name) : undefined;
                           const walletName = walletMap.get(transaction.walletId) ?? t("common.noWallet");
-                          const description = transaction.note || category?.name || t("common.transaction");
+                          const description = transaction.note || categoryName || t("common.transaction");
                           const subtitle = transaction.note
-                            ? category?.name ?? t("common.uncategorized")
+                            ? categoryName ?? t("common.uncategorized")
                             : t("transactions.subtitle.activity");
                           const iconName = resolveIcon(transaction.type);
                           const dateValue = new Date(transaction.date);
@@ -676,7 +682,7 @@ function TransactionsPageInner() {
                                   : "border-tertiary/20 bg-tertiary/5 text-tertiary"
                               }`}
                             >
-                              {category?.name ?? t("common.uncategorized")}
+                              {categoryName ?? t("common.uncategorized")}
                             </span>
                           </td>
                           <td className="px-6 py-6">
@@ -803,7 +809,7 @@ function TransactionsPageInner() {
                         : "border-outline-variant/10 bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
                     }`}
                   >
-                    <span>{category.name}</span>
+                    <span>{t(`category.${category.name}`, category.name)}</span>
                     <span className="material-symbols-outlined text-base">
                       {checked ? "check_circle" : "radio_button_unchecked"}
                     </span>

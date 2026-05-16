@@ -7,6 +7,8 @@ import type { Route } from "next";
 import LoginForm from "./LoginForm";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 import ResetPasswordForm from "./ResetPasswordForm";
+import { useAppSettingsStore } from "@/stores/appSettingsStore";
+import { t } from "@/lib/i18n";
 
 type Mode = "login" | "forgot" | "reset";
 
@@ -20,6 +22,7 @@ function sanitizeRedirect(path: string | null): string {
 export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const language = useAppSettingsStore((state) => state.language);
   const nextPath = useMemo(() => sanitizeRedirect(searchParams.get("next")), [searchParams]);
   const modeParam = useMemo(() => searchParams.get("mode"), [searchParams]);
   const [mode, setModeState] = useState<Mode>(() => {
@@ -76,24 +79,24 @@ export default function LoginClient() {
   const viewMeta = useMemo(() => {
     if (mode === "forgot") {
       return {
-        label: "Lupa Password",
-        title: "Pulihkan akses Anda",
-        description: "Masukkan email terdaftar untuk menerima tautan reset kata sandi.",
+        label: t(language, "auth.forgot.title"),
+        title: t(language, "auth.forgot.title"),
+        description: t(language, "auth.forgot.description"),
       };
     }
     if (mode === "reset") {
       return {
-        label: "Reset Password",
-        title: "Buat kata sandi baru",
-        description: "Pastikan kata sandi baru aman dan mudah Anda ingat.",
+        label: t(language, "auth.reset.title"),
+        title: t(language, "auth.reset.title"),
+        description: t(language, "auth.reset.description"),
       };
     }
     return {
-      label: "Masuk",
-      title: "Selamat datang kembali",
-      description: "Lanjutkan pengelolaan cashflow dan pantau dompet Anda.",
+      label: t(language, "auth.login.title"),
+      title: t(language, "auth.login.title"),
+      description: t(language, "auth.login.description"),
     };
-  }, [mode]);
+  }, [mode, language]);
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">

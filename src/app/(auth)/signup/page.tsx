@@ -57,7 +57,7 @@ export default function SignupPage() {
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
       pushToast({
-        title: "Gagal daftar",
+        title: "toast.signup_failed",
         description: (payload as { error?: string }).error ?? `HTTP ${response.status}`,
         variant: "error",
       });
@@ -76,7 +76,7 @@ export default function SignupPage() {
       options: { redirectTo },
     });
     if (error) {
-      pushToast({ title: "Gagal daftar Google", description: error.message, variant: "error" });
+      pushToast({ title: "toast.signup_google_failed", description: error.message, variant: "error" });
     }
   };
 
@@ -103,7 +103,7 @@ export default function SignupPage() {
           </div>
           <div>
             <label className="text-xs text-[var(--text-dimmed)]">Email</label>
-            <Input placeholder="nama@email.com" type="email" {...register("email")} />
+            <Input placeholder="name@email.com" type="email" {...register("email")} />
             {errors.email ? (
               <p className="mt-1 text-xs text-rose-300">{errors.email.message}</p>
             ) : null}
