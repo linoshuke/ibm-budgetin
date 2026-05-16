@@ -7,8 +7,15 @@
 }
 
 html {
-  background-color: #0e141d;
+  background-color: rgb(var(--c-background));
+}
+
+:root[data-theme="dark"] {
   color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 html,
@@ -33,8 +40,8 @@ body {
   min-height: 100vh;
   position: relative;
   isolation: isolate;
-  background: #0e141d;
-  color: #dde2f1;
+  background: rgb(var(--c-background));
+  color: rgb(var(--c-on-surface));
   font-family: var(--font-body), "Segoe UI", sans-serif;
 }
 
@@ -82,6 +89,7 @@ a {
 }
 
 .tnum {
+  font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
@@ -91,16 +99,16 @@ a {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0e141d;
+  background: rgb(var(--c-background));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1a202a;
+  background: rgb(var(--c-surface-container));
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-corner {
-  background: #0e141d;
+  background: rgb(var(--c-background));
 }
 
 ::selection {

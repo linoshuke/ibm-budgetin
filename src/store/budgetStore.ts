@@ -46,6 +46,16 @@ function setState(updater: (current: BudgetState) => BudgetState) {
   emitChange();
 }
 
+function createClientId(prefix: string) {
+  const uuid =
+    globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(16).slice(2)}`;
+  return `${prefix}:${uuid}`;
+}
+
+function resolveDelta(type: Transaction["type"], amount: number) {
+  return type === "expense" ? -amount : amount;
+}
+
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json" },
@@ -116,84 +126,231 @@ export const budgetActions = {
   },
 
   async addTransaction(payload: Omit<Transaction, "id">) {
-    const created = await apiFetch<Transaction>("/api/transactions", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+    const optimistic: Transaction = {
+      ...payload,
+      id: createClientId("txn"),
+      clientStatus: "optimistic",
+    };
 
-    const delta = created.type === "expense" ? -created.amount : created.amount;
+    const optimisticDelta = resolveDelta(optimistic.type, optimistic.amount);
+
     setState((c) => ({
       ...c,
-      transactions: [created, ...c.transactions].slice(0, DASHBOARD_TRANSACTION_LIMIT),
+      transactions: [optimistic, ...c.transactions].slice(0, DASHBOARD_TRANSACTION_LIMIT),
       wallets: c.wallets.map((wallet) =>
-        wallet.id === created.walletId
-          ? { ...wallet, balance: Number(wallet.balance ?? 0) + delta }
+        wallet.id === optimistic.walletId
+          ? { ...wallet, balance: Number(wallet.balance ?? 0) + optimisticDelta }
           : wallet,
       ),
     }));
 
-    dispatchTransactionsChanged();
-    return created;
+    try {
+      const created = await apiFetch<Transaction>("/api/transactions", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      const createdDelta = resolveDelta(created.type, created.amount);
+
+      setState((c) => {
+        const index = c.transactions.findIndex((item) => item.id === optimistic.id);
+        const nextTransactions = [...c.transactions];
+
+        if (index !== -1) {
+          nextTransactions[index] = created;
+        } else {
+          nextTransactions.unshift(created);
+        }
+
+        let wallets = c.wallets;
+
+        // Reconcile wallet balances in case API normalizes payload.
+        if (created.walletId === optimistic.walletId) {
+          const diff = createdDelta - optimisticDelta;
+          if (diff !== 0) {
+            wallets = wallets.map((wallet) =>
+              wallet.id === created.walletId
+                ? { ...wallet, balance: Number(wallet.balance ?? 0) + diff }
+                : wallet,
+            );
+          }
+        } else {
+          wallets = wallets.map((wallet) => {
+            if (wallet.id === optimistic.walletId) {
+              return { ...wallet, balance: Number(wallet.balance ?? 0) - optimisticDelta };
+            }
+            if (wallet.id === created.walletId) {
+              return { ...wallet, balance: Number(wallet.balance ?? 0) + createdDelta };
+            }
+            return wallet;
+          });
+        }
+
+        return {
+          ...c,
+          transactions: nextTransactions.slice(0, DASHBOARD_TRANSACTION_LIMIT),
+          wallets,
+        };
+      });
+
+      dispatchTransactionsChanged();
+      return created;
+    } catch (error) {
+      setState((c) => ({
+        ...c,
+        transactions: c.transactions.filter((item) => item.id !== optimistic.id),
+        wallets: c.wallets.map((wallet) =>
+          wallet.id === optimistic.walletId
+            ? { ...wallet, balance: Number(wallet.balance ?? 0) - optimisticDelta }
+            : wallet,
+        ),
+      }));
+
+      throw error;
+    }
   },
 
   async updateTransaction(id: string, payload: Omit<Transaction, "id">) {
-    const updated = await apiFetch<Transaction>(`/api/transactions/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    });
+    const previousSnapshot = state.transactions.find((item) => item.id === id) ?? null;
+    const optimistic: Transaction = { ...payload, id, clientStatus: "optimistic" };
 
     setState((c) => {
-      const previous = c.transactions.find((item) => item.id === id);
+      const previous = c.transactions.find((item) => item.id === id) ?? null;
       let wallets = c.wallets;
+
       if (previous) {
-        const prevDelta = previous.type === "expense" ? -previous.amount : previous.amount;
+        const prevDelta = resolveDelta(previous.type, previous.amount);
         wallets = wallets.map((wallet) =>
           wallet.id === previous.walletId
             ? { ...wallet, balance: Number(wallet.balance ?? 0) - prevDelta }
             : wallet,
         );
       }
-      const nextDelta = updated.type === "expense" ? -updated.amount : updated.amount;
+
+      const nextDelta = resolveDelta(optimistic.type, optimistic.amount);
       wallets = wallets.map((wallet) =>
-        wallet.id === updated.walletId
+        wallet.id === optimistic.walletId
           ? { ...wallet, balance: Number(wallet.balance ?? 0) + nextDelta }
           : wallet,
       );
 
       return {
         ...c,
-        transactions: c.transactions.map((item) => (item.id === id ? updated : item)),
+        transactions: c.transactions.map((item) => (item.id === id ? optimistic : item)),
         wallets,
       };
     });
 
-    dispatchTransactionsChanged();
-    return updated;
+    try {
+      const updated = await apiFetch<Transaction>(`/api/transactions/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      const optimisticDelta = resolveDelta(optimistic.type, optimistic.amount);
+      const updatedDelta = resolveDelta(updated.type, updated.amount);
+
+      setState((c) => {
+        let wallets = c.wallets;
+
+        if (updated.walletId === optimistic.walletId) {
+          const diff = updatedDelta - optimisticDelta;
+          if (diff !== 0) {
+            wallets = wallets.map((wallet) =>
+              wallet.id === updated.walletId
+                ? { ...wallet, balance: Number(wallet.balance ?? 0) + diff }
+                : wallet,
+            );
+          }
+        } else {
+          wallets = wallets.map((wallet) => {
+            if (wallet.id === optimistic.walletId) {
+              return { ...wallet, balance: Number(wallet.balance ?? 0) - optimisticDelta };
+            }
+            if (wallet.id === updated.walletId) {
+              return { ...wallet, balance: Number(wallet.balance ?? 0) + updatedDelta };
+            }
+            return wallet;
+          });
+        }
+
+        return {
+          ...c,
+          transactions: c.transactions.map((item) => (item.id === id ? updated : item)),
+          wallets,
+        };
+      });
+
+      dispatchTransactionsChanged();
+      return updated;
+    } catch (error) {
+      if (previousSnapshot) {
+        // Rollback by re-applying snapshot through state updater.
+        setState((c) => {
+          let wallets = c.wallets;
+
+          const optimisticDelta = resolveDelta(optimistic.type, optimistic.amount);
+          wallets = wallets.map((wallet) =>
+            wallet.id === optimistic.walletId
+              ? { ...wallet, balance: Number(wallet.balance ?? 0) - optimisticDelta }
+              : wallet,
+          );
+
+          const prevDelta = resolveDelta(previousSnapshot.type, previousSnapshot.amount);
+          wallets = wallets.map((wallet) =>
+            wallet.id === previousSnapshot.walletId
+              ? { ...wallet, balance: Number(wallet.balance ?? 0) + prevDelta }
+              : wallet,
+          );
+
+          return {
+            ...c,
+            transactions: c.transactions.map((item) => (item.id === id ? previousSnapshot : item)),
+            wallets,
+          };
+        });
+      }
+
+      throw error;
+    }
   },
 
   async deleteTransaction(id: string) {
-    await apiFetch(`/api/transactions/${id}`, { method: "DELETE" });
+    const previousSnapshot = state.transactions.find((item) => item.id === id) ?? null;
+    if (!previousSnapshot) {
+      await apiFetch(`/api/transactions/${id}`, { method: "DELETE" });
+      dispatchTransactionsChanged();
+      return;
+    }
 
-    setState((c) => {
-      const previous = c.transactions.find((item) => item.id === id);
-      let wallets = c.wallets;
-      if (previous) {
-        const prevDelta = previous.type === "expense" ? -previous.amount : previous.amount;
-        wallets = wallets.map((wallet) =>
-          wallet.id === previous.walletId
-            ? { ...wallet, balance: Number(wallet.balance ?? 0) - prevDelta }
-            : wallet,
-        );
-      }
+    const prevDelta = resolveDelta(previousSnapshot.type, previousSnapshot.amount);
 
-      return {
+    setState((c) => ({
+      ...c,
+      transactions: c.transactions.filter((item) => item.id !== id),
+      wallets: c.wallets.map((wallet) =>
+        wallet.id === previousSnapshot.walletId
+          ? { ...wallet, balance: Number(wallet.balance ?? 0) - prevDelta }
+          : wallet,
+      ),
+    }));
+
+    try {
+      await apiFetch(`/api/transactions/${id}`, { method: "DELETE" });
+      dispatchTransactionsChanged();
+    } catch (error) {
+      setState((c) => ({
         ...c,
-        transactions: c.transactions.filter((item) => item.id !== id),
-        wallets,
-      };
-    });
+        transactions: [previousSnapshot, ...c.transactions].slice(0, DASHBOARD_TRANSACTION_LIMIT),
+        wallets: c.wallets.map((wallet) =>
+          wallet.id === previousSnapshot.walletId
+            ? { ...wallet, balance: Number(wallet.balance ?? 0) + prevDelta }
+            : wallet,
+        ),
+      }));
 
-    dispatchTransactionsChanged();
+      throw error;
+    }
   },
 
   async addCategory(payload: Omit<Category, "id" | "isDefault">) {

@@ -48,8 +48,8 @@ export default function MonthlySummary() {
   const incomePercent = calculateChange(income, prevIncome);
   const expensePercent = calculateExpenseImprovement(expense, prevExpense);
 
-  const incomeTone = incomePercent >= 0 ? "primary" : "error";
-  const expenseTone = expensePercent >= 0 ? "primary" : "error";
+  const incomeImproved = incomePercent >= 0;
+  const expenseImproved = expensePercent >= 0;
 
   const incomeLabel = `${incomePercent >= 0 ? "+" : ""}${incomePercent.toFixed(1)}% ${t("home.fromLastMonth")}`;
   const expenseLabel = `${expensePercent >= 0 ? "+" : ""}${expensePercent.toFixed(1)}% ${t("home.fromLastMonth")}`;
@@ -61,9 +61,9 @@ export default function MonthlySummary() {
     <div className="space-y-6">
       <div className="flex flex-col justify-between rounded-xl bg-surface-container-low p-6 transition-all hover:bg-surface-container">
         <div className="flex items-start justify-between">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${incomeTone === "primary" ? "bg-primary/10" : "bg-error/10"}`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${incomeImproved ? "bg-emerald-500/10" : "bg-error/10"}`}>
             <span
-              className={`material-symbols-outlined ${incomeTone === "primary" ? "text-primary" : "text-error"}`}
+              className={`material-symbols-outlined ${incomeImproved ? "text-emerald-400" : "text-error"}`}
               data-icon={incomeIcon}
             >
               {incomeIcon}
@@ -71,7 +71,7 @@ export default function MonthlySummary() {
           </div>
           <span
             className={`rounded px-2 py-1 text-[10px] font-bold uppercase ${
-              incomeTone === "primary" ? "bg-primary/5 text-primary" : "bg-error/5 text-error"
+              incomeImproved ? "bg-emerald-500/5 text-emerald-400" : "bg-error/5 text-error"
             }`}
           >
             {incomeLabel}
@@ -86,9 +86,9 @@ export default function MonthlySummary() {
       </div>
       <div className="flex flex-col justify-between rounded-xl bg-surface-container-low p-6 transition-all hover:bg-surface-container">
         <div className="flex items-start justify-between">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${expenseTone === "error" ? "bg-error/10" : "bg-primary/10"}`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${expenseImproved ? "bg-emerald-500/10" : "bg-error/10"}`}>
             <span
-              className={`material-symbols-outlined ${expenseTone === "error" ? "text-error" : "text-primary"}`}
+              className={`material-symbols-outlined ${expenseImproved ? "text-emerald-400" : "text-error"}`}
               data-icon={expenseIcon}
             >
               {expenseIcon}
@@ -96,7 +96,7 @@ export default function MonthlySummary() {
           </div>
           <span
             className={`rounded px-2 py-1 text-[10px] font-bold uppercase ${
-              expenseTone === "error" ? "bg-error/5 text-error" : "bg-primary/5 text-primary"
+              expenseImproved ? "bg-emerald-500/5 text-emerald-400" : "bg-error/5 text-error"
             }`}
           >
             {expenseLabel}

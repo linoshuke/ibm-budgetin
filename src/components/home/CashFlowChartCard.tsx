@@ -19,8 +19,8 @@ import type { MonthlySummary } from "@/types";
 import { useI18n } from "@/hooks/useI18n";
 import SensitiveCurrency from "@/components/shared/SensitiveCurrency";
 
-const INCOME_COLOR = "#7cebff";
-const EXPENSE_COLOR = "#adc6ff";
+const INCOME_COLOR = "#34d399";
+const EXPENSE_COLOR = "#fb7185";
 
 function monthKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -181,12 +181,10 @@ export default function CashFlowChartCard() {
       income: {
         percent: incomeDelta,
         label: `${incomeDelta >= 0 ? t("home.cashFlow.trendUp") : t("home.cashFlow.trendDown")} ${Math.abs(incomeDelta).toFixed(1)}%`,
-        tone: incomeDelta >= 0 ? "primary" : "error",
       },
       expense: {
         percent: expenseDelta,
         label: `${expenseDelta >= 0 ? t("home.cashFlow.trendUp") : t("home.cashFlow.trendDown")} ${Math.abs(expenseDelta).toFixed(1)}%`,
-        tone: expenseDelta >= 0 ? "error" : "primary",
       },
     };
 
@@ -212,8 +210,8 @@ export default function CashFlowChartCard() {
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-wider">
             <span
               className={`rounded-full px-2 py-1 ${
-                trend.income.tone === "primary"
-                  ? "bg-primary/10 text-primary"
+                trend.income.percent >= 0
+                  ? "bg-emerald-500/10 text-emerald-400"
                   : "bg-error/10 text-error"
               }`}
             >
@@ -221,9 +219,9 @@ export default function CashFlowChartCard() {
             </span>
             <span
               className={`rounded-full px-2 py-1 ${
-                trend.expense.tone === "error"
+                trend.expense.percent > 0
                   ? "bg-error/10 text-error"
-                  : "bg-primary/10 text-primary"
+                  : "bg-emerald-500/10 text-emerald-400"
               }`}
             >
               {t("common.expense")} {trend.expense.label} {t("home.fromLastMonth")}

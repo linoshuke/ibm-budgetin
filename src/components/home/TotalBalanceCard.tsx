@@ -91,7 +91,7 @@ export default function TotalBalanceCard() {
       }}
       className="group/card relative overflow-visible rounded-xl bg-gradient-to-br from-[#1a202a] to-[#0e141d] p-8 text-left shadow-2xl shadow-[#080e18]/50 transition-transform hover:-translate-y-1"
     >
-      <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-primary/10 blur-[80px] transition-colors group-hover/card:bg-primary/20" />
+      <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[color-mix(in_srgb,var(--accent-indigo)_12%,transparent)] blur-[80px] transition-colors group-hover/card:bg-[color-mix(in_srgb,var(--accent-indigo)_22%,transparent)]" />
       <div className="relative z-10 flex h-full flex-col justify-between">
         <div>
           <div className="flex items-center space-x-2 text-sm font-medium text-on-surface-variant">
@@ -99,7 +99,7 @@ export default function TotalBalanceCard() {
             <div className="relative">
               <button
                 type="button"
-                className="group/info flex h-6 w-6 items-center justify-center rounded-full border border-outline-variant/40 text-[12px] text-on-surface-variant transition-colors hover:border-primary/40 hover:text-primary"
+                className="group/info flex h-6 w-6 items-center justify-center rounded-full border border-outline-variant/40 text-[12px] text-on-surface-variant transition-colors hover:border-[color-mix(in_srgb,var(--accent-indigo)_45%,transparent)] hover:text-[var(--accent-indigo)]"
                 aria-label={t("home.totalNetWorth")}
               >
                 i
@@ -125,17 +125,17 @@ export default function TotalBalanceCard() {
           <div
             className={`flex items-center space-x-2 rounded-full px-4 py-2 backdrop-blur-md ${
               trendTone === "primary"
-                ? "border border-primary/20 bg-primary/10"
+                ? "border border-emerald-500/25 bg-emerald-500/10"
                 : "border border-error/30 bg-error/10"
             }`}
           >
             <span
-              className={`material-symbols-outlined ${trendTone === "primary" ? "text-primary" : "text-error"}`}
+              className={`material-symbols-outlined ${trendTone === "primary" ? "text-emerald-400" : "text-error"}`}
               data-icon={trendTone === "primary" ? "trending_up" : "trending_down"}
             >
               {trendTone === "primary" ? "trending_up" : "trending_down"}
             </span>
-            <span className={`text-sm font-bold ${trendTone === "primary" ? "text-primary" : "text-error"}`}>
+            <span className={`text-sm font-bold ${trendTone === "primary" ? "text-emerald-400" : "text-error"}`}>
               {trendLabel} <span className="font-normal opacity-70">{t("home.thisMonth")}</span>
             </span>
           </div>
@@ -149,8 +149,8 @@ export default function TotalBalanceCard() {
           <path d="M0,80 Q50,70 100,40 T200,20 L200,100 L0,100 Z" fill="url(#hero-gradient)" />
           <defs>
             <linearGradient id="hero-gradient" x1="0%" x2="0%" y1="0%" y2="100%">
-              <stop offset="0%" stopColor="#7cebff" stopOpacity="1" />
-              <stop offset="100%" stopColor="#7cebff" stopOpacity="0" />
+              <stop offset="0%" stopColor="#6366f1" stopOpacity="1" />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
             </linearGradient>
           </defs>
         </svg>

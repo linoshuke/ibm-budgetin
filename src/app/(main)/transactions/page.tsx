@@ -18,6 +18,7 @@ import { TRANSACTIONS_CHANGED_EVENT } from "@/lib/transaction-events";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuth } from "@/hooks/useAuth";
+import { useUIStore } from "@/stores/uiStore";
 
 const pageSize = 50;
 
@@ -61,6 +62,7 @@ function TransactionsPageInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, isAnonymous, loading: authLoading } = useAuth();
+  const pushToast = useUIStore((state) => state.pushToast);
   const categories = useBudgetStore((state) => state.categories);
   const wallets = useBudgetStore((state) => state.wallets);
   const loading = useBudgetStore((state) => state.loading);
@@ -421,6 +423,8 @@ function TransactionsPageInner() {
   }
 
   const handleSubmit = async (payload: Omit<Transaction, "id">) => {
+    setShowTransactionModal(false);
+    setEditingTransaction(null);
     try {
       setSavingTransaction(true);
       if (editingTransaction) {
@@ -428,10 +432,10 @@ function TransactionsPageInner() {
       } else {
         await budgetActions.addTransaction(payload);
       }
-      setShowTransactionModal(false);
-      setEditingTransaction(null);
+      pushToast({ title: "toast.transaction_saved", variant: "success" });
     } catch (err) {
-      console.error("Gagal menyimpan transaksi:", err);
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
+      pushToast({ title: "toast.add_transaction_failed", description: message, variant: "error" });
     } finally {
       setSavingTransaction(false);
     }
@@ -459,7 +463,7 @@ function TransactionsPageInner() {
               search
             </span>
             <input
-              className="w-full rounded-lg border-none bg-surface-container py-3 pl-12 pr-4 text-on-surface placeholder:text-on-surface-variant transition-all focus:bg-surface-container-high focus:ring-1 focus:ring-primary"
+              className="w-full rounded-lg border-none bg-surface-container py-3 pl-12 pr-4 text-on-surface placeholder:text-on-surface-variant transition-all focus:bg-surface-container-high focus:ring-1 focus:ring-[var(--accent-indigo)]"
               placeholder={t("transactions.searchPlaceholder")}
               type="text"
               value={searchQuery}
@@ -574,7 +578,7 @@ function TransactionsPageInner() {
                   </h2>
                   <span
                     className={`flex items-center gap-1 text-sm font-bold sm:justify-end ${
-                      spendingTrend.increase ? "text-error" : "text-primary"
+                      spendingTrend.increase ? "text-error" : "text-emerald-400"
                     }`}
                   >
                     <span className="material-symbols-outlined text-sm">
@@ -619,10 +623,10 @@ function TransactionsPageInner() {
                 }}
                 className="group flex cursor-pointer flex-col items-center justify-center rounded-xl border border-outline-variant/5 bg-surface-container-low p-6 transition-all hover:bg-surface-container-highest"
               >
-                <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 transition-transform group-hover:scale-110">
-                  <span className="material-symbols-outlined text-3xl text-primary">add</span>
+                <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--accent-indigo)_12%,transparent)] transition-transform group-hover:scale-110">
+                  <span className="material-symbols-outlined text-3xl text-[var(--accent-indigo)]">add</span>
                 </div>
-                <p className="font-headline font-bold text-primary">{t("transactions.newTransaction")}</p>
+                <p className="font-headline font-bold text-[var(--accent-indigo)]">{t("transactions.newTransaction")}</p>
               </button>
             </div>
 
@@ -650,9 +654,17 @@ function TransactionsPageInner() {
                             : t("transactions.subtitle.activity");
                           const iconName = resolveIcon(transaction.type);
                           const dateValue = new Date(transaction.date);
-                      const tone = transaction.type === "income" ? "primary" : "tertiary";
+                      const isIncome = transaction.type === "income";
+                      const isOptimistic = transaction.clientStatus === "optimistic";
+                      const amountClass = isIncome ? "text-emerald-400" : "text-rose-400";
+                      const iconWrapClass = isIncome
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : "bg-rose-500/10 text-rose-400";
                       return (
-                        <tr key={transaction.id} className="group cursor-default transition-all hover:bg-surface-container">
+                        <tr
+                          key={transaction.id}
+                          className={`group cursor-default transition-all hover:bg-surface-container ${isOptimistic ? "opacity-70" : ""}`}
+                        >
                           <td className="px-8 py-6">
                             <div className="flex flex-col">
                               <span className="tnum font-semibold text-on-surface">
@@ -663,7 +675,7 @@ function TransactionsPageInner() {
                           </td>
                           <td className="px-6 py-6">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-highest text-primary">
+                              <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconWrapClass}`}>
                                   <span className="material-symbols-outlined icon-fill">
                                     {iconName}
                                   </span>
@@ -676,11 +688,7 @@ function TransactionsPageInner() {
                           </td>
                           <td className="px-6 py-6">
                             <span
-                              className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${
-                                tone === "primary"
-                                  ? "border-primary/30 bg-primary/20 text-primary-fixed"
-                                  : "border-tertiary/20 bg-tertiary/5 text-tertiary"
-                              }`}
+                              className="rounded-full border border-outline-variant/15 bg-surface-container-high/60 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant"
                             >
                               {categoryName ?? t("common.uncategorized")}
                             </span>
@@ -693,39 +701,41 @@ function TransactionsPageInner() {
                           </td>
                           <td className="px-6 py-6 text-right">
                             <span
-                              className={`tnum font-bold ${
-                                transaction.type === "income" ? "text-primary" : "text-on-surface"
-                              }`}
+                              className={`tnum inline-flex items-center justify-end gap-2 font-bold ${amountClass}`}
                             >
-                              {transaction.type === "income" ? "+" : "-"}
+                              {isIncome ? "+" : "-"}
                               <SensitiveCurrency
                                 value={Math.abs(transaction.amount)}
-                                className={transaction.type === "income" ? "text-primary" : "text-on-surface"}
+                                className={amountClass}
                                 eyeClassName="h-6 w-6 border-transparent bg-transparent hover:bg-surface-container"
                                 wrapperClassName="gap-1"
+                                showEye={false}
                               />
+                              {isOptimistic ? <span className="ml-1 text-[10px] font-semibold text-on-surface-variant">Menyimpan…</span> : null}
                             </span>
                           </td>
                           <td className="px-8 py-6 text-right">
                             <div className="flex justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                               <button
                                 type="button"
-                                className="p-2 text-on-surface-variant transition-colors hover:text-primary"
+                                className="p-2 text-on-surface-variant transition-colors hover:text-[var(--accent-indigo)] disabled:opacity-40"
                                 onClick={() => {
                                   setEditingTransaction(transaction);
                                   setShowTransactionModal(true);
                                 }}
+                                disabled={isOptimistic}
                               >
                                 <span className="material-symbols-outlined text-lg">edit</span>
                               </button>
                               <button
                                 type="button"
-                                className="p-2 text-on-surface-variant transition-colors hover:text-error"
+                                className="p-2 text-on-surface-variant transition-colors hover:text-error disabled:opacity-40"
                                 onClick={async () => {
                                   const confirmed = window.confirm(t("transactions.confirmDelete"));
                                   if (!confirmed) return;
                                   await budgetActions.deleteTransaction(transaction.id);
                                 }}
+                                disabled={isOptimistic}
                               >
                                 <span className="material-symbols-outlined text-lg">delete</span>
                               </button>
@@ -763,7 +773,7 @@ function TransactionsPageInner() {
                     type="button"
                     onClick={() => fetchPage(pageOffset, false)}
                     disabled={loadingPage}
-                    className="rounded-lg border border-primary/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-60"
+                    className="rounded-lg border border-[color-mix(in_srgb,var(--accent-indigo)_30%,transparent)] px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--accent-indigo)] hover:bg-[color-mix(in_srgb,var(--accent-indigo)_10%,transparent)] disabled:opacity-60"
                   >
                     {loadingPage ? t("transactions.loading") : t("transactions.loadMore")}
                   </button>
@@ -805,7 +815,7 @@ function TransactionsPageInner() {
                     }}
                     className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors ${
                       checked
-                        ? "border-primary/30 bg-primary/10 text-on-surface"
+                        ? "border-[color-mix(in_srgb,var(--accent-indigo)_35%,transparent)] bg-[color-mix(in_srgb,var(--accent-indigo)_10%,transparent)] text-on-surface"
                         : "border-outline-variant/10 bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
                     }`}
                   >
@@ -828,7 +838,7 @@ function TransactionsPageInner() {
               <button
                 type="button"
                 onClick={() => setShowCategoryFilter(false)}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary"
+                className="rounded-lg bg-[var(--accent-indigo)] px-4 py-2 text-sm font-semibold text-white"
               >
                 {t("transactions.apply")}
               </button>

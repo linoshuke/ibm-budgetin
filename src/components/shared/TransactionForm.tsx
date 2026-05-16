@@ -112,7 +112,7 @@ export default function TransactionForm({
       <div className="flex flex-wrap items-center gap-2">
         <Button
           type="button"
-          variant={type === "income" ? "primary" : "outline"}
+          variant={type === "income" ? "income" : "outline"}
           onClick={() => setType("income")}
           disabled={disabled}
         >
@@ -120,7 +120,7 @@ export default function TransactionForm({
         </Button>
         <Button
           type="button"
-          variant={type === "expense" ? "primary" : "outline"}
+          variant={type === "expense" ? "expense" : "outline"}
           onClick={() => setType("expense")}
           disabled={disabled}
         >
@@ -137,11 +137,12 @@ export default function TransactionForm({
             value={amountInput}
             onChange={(event) => setAmountInput(event.target.value.replace(/\D/g, ""))}
             required
+            autoFocus
             disabled={disabled}
           />
           <div className="text-xs text-[var(--text-dimmed)]">
             Preview:{" "}
-            <SensitiveCurrency value={amount} className="text-[var(--text-dimmed)]" eyeClassName="h-6 w-6" />
+            <SensitiveCurrency value={amount} className="text-[var(--text-dimmed)]" showEye={false} />
           </div>
         </div>
 
@@ -254,7 +255,7 @@ export default function TransactionForm({
               type="checkbox"
               checked={isBill}
               onChange={(e) => setIsBill(e.target.checked)}
-              className="h-4 w-4 rounded border-[var(--border-soft)] bg-[var(--bg-card-muted)] text-[var(--primary)] focus:ring-[var(--primary)]"
+              className="h-4 w-4 rounded border-[var(--border-soft)] bg-[var(--bg-card-muted)] accent-[var(--accent-indigo)]"
               disabled={disabled}
             />
             <label htmlFor="is-bill-checkbox" className="text-sm font-medium text-[var(--text-primary)] cursor-pointer select-none">

@@ -9,4 +9,10 @@ export interface Transaction {
   date: string;
   note?: string;
   isBill?: boolean;
+
+  /**
+   * Client-only UI state for optimistic updates.
+   * Never persisted to the database.
+   */
+  clientStatus?: "optimistic" | "failed";
 }

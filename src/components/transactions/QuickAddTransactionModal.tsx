@@ -20,11 +20,11 @@ export default function QuickAddTransactionModal() {
   const canManageWallets = Boolean(user) && !isAnonymous;
 
   const handleSubmit = async (payload: Omit<Transaction, "id">) => {
+    closeModal("quickAddTransaction");
     try {
       setSaving(true);
       await budgetActions.addTransaction(payload);
       pushToast({ title: "toast.transaction_saved", variant: "success" });
-      closeModal("quickAddTransaction");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Terjadi kesalahan.";
       pushToast({ title: "toast.add_transaction_failed", description: message, variant: "error" });

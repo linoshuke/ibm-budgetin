@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-type Variant = "primary" | "ghost" | "outline" | "danger";
+type Variant = "primary" | "income" | "expense" | "ghost" | "outline" | "danger";
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -16,11 +16,15 @@ export default function Button({
   ...props
 }: Props) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)] disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-indigo)] disabled:cursor-not-allowed disabled:opacity-60";
 
   const styles: Record<Variant, string> = {
     primary:
-      "bg-gradient-to-r from-[var(--accent-primary)] via-[var(--accent-indigo)] to-[#0ea5e9] text-white px-4 py-2 shadow-lg shadow-[#0ea5e9]/30 hover:brightness-110",
+      "bg-gradient-to-b from-[color-mix(in_srgb,var(--accent-indigo)_92%,white)] to-[var(--accent-indigo)] text-white px-4 py-2 shadow-lg shadow-black/20 hover:brightness-110",
+    income:
+      "bg-emerald-500/15 text-emerald-200 px-4 py-2 ring-1 ring-inset ring-emerald-400/30 hover:bg-emerald-500/20",
+    expense:
+      "bg-rose-500/15 text-rose-200 px-4 py-2 ring-1 ring-inset ring-rose-400/30 hover:bg-rose-500/20",
     ghost: "px-3 py-2 text-[var(--text-primary)] hover:bg-white/5 hover:text-white",
     outline:
       "px-4 py-2 border border-[var(--border-soft)] text-[var(--text-primary)] hover:border-[var(--border-strong)] hover:bg-white/5",

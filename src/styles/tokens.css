@@ -1,10 +1,11 @@
 :root,
 :root[data-theme="dark"] {
-  --bg-base: #0a0f16;
-  --bg-nav: rgba(11, 18, 30, 0.92);
-  --bg-card: rgba(15, 23, 36, 0.88);
+  /* Core surfaces (synced with Tailwind semantic colors) */
+  --bg-base: #0e141d;
+  --bg-nav: rgba(14, 20, 29, 0.92);
+  --bg-card: rgba(26, 32, 42, 0.9);
   --bg-card-muted: rgba(148, 163, 184, 0.08);
-  --text-primary: #f1f5f9;
+  --text-primary: #dde2f1;
   --text-dimmed: #94a3b8;
   --border-soft: rgba(148, 163, 184, 0.18);
   --border-strong: rgba(226, 232, 240, 0.5);
@@ -14,12 +15,61 @@
   --accent-indigo: #6366f1;
   --accent-rose: #fb7185;
   --accent-amber: #f59e0b;
+
+  /* Tailwind semantic palette (RGB triplets for opacity modifiers) */
+  --c-on-secondary-fixed: 0 26 65;
+  --c-primary-fixed: 158 239 255;
+  --c-on-primary: 0 54 62;
+  --c-secondary-fixed-dim: 173 198 255;
+  --c-tertiary-fixed-dim: 137 206 255;
+  --c-on-error-container: 255 218 214;
+  --c-inverse-primary: 0 104 118;
+  --c-secondary: 173 198 255;
+  --c-surface-container-lowest: 8 14 24;
+  --c-on-surface: 221 226 241;
+  --c-inverse-surface: 221 226 241;
+  --c-on-background: 221 226 241;
+  --c-tertiary-fixed: 200 230 255;
+  --c-error: 255 180 171;
+  --c-on-secondary-container: 224 232 255;
+  --c-surface-variant: 47 53 64;
+  --c-inverse-on-surface: 43 49 60;
+  --c-outline: 133 147 150;
+  --c-on-primary-fixed-variant: 0 78 89;
+  --c-on-tertiary-fixed-variant: 0 76 110;
+  --c-tertiary: 185 224 255;
+  --c-on-tertiary-container: 0 83 120;
+  --c-surface-tint: 41 217 242;
+  --c-surface-bright: 51 57 69;
+  --c-on-surface-variant: 187 201 204;
+  --c-secondary-fixed: 216 226 255;
+  --c-secondary-container: 0 100 212;
+  --c-surface-container-highest: 47 53 64;
+  --c-surface-container: 26 32 42;
+  --c-on-secondary-fixed-variant: 0 68 148;
+  --c-on-tertiary: 0 52 77;
+  --c-on-tertiary-fixed: 0 30 47;
+  --c-surface-container-high: 36 42 53;
+  --c-surface: 14 20 29;
+  --c-on-error: 105 0 5;
+  --c-surface-container-low: 22 28 38;
+  --c-primary: 124 235 255;
+  --c-on-primary-container: 0 86 97;
+  --c-outline-variant: 60 73 76;
+  --c-surface-dim: 14 20 29;
+  --c-background: 14 20 29;
+  --c-tertiary-container: 118 200 255;
+  --c-primary-fixed-dim: 41 217 242;
+  --c-primary-container: 19 210 235;
+  --c-on-secondary: 0 46 105;
+  --c-error-container: 147 0 10;
+  --c-on-primary-fixed: 0 31 36;
 }
 
 :root[data-theme="light"] {
   --bg-base: #f6f7fb;
-  --bg-nav: rgba(255, 255, 255, 0.9);
-  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-nav: rgba(255, 255, 255, 0.92);
+  --bg-card: rgba(255, 255, 255, 0.96);
   --bg-card-muted: rgba(148, 163, 184, 0.14);
   --text-primary: #0f172a;
   --text-dimmed: #475569;
@@ -31,6 +81,55 @@
   --accent-indigo: #4338ca;
   --accent-rose: #e11d48;
   --accent-amber: #f59e0b;
+
+  /* Tailwind semantic palette (RGB triplets for opacity modifiers) */
+  --c-on-secondary-fixed: 49 46 129;
+  --c-primary-fixed: 153 246 228;
+  --c-on-primary: 255 255 255;
+  --c-secondary-fixed-dim: 199 210 254;
+  --c-tertiary-fixed-dim: 125 211 252;
+  --c-on-error-container: 153 27 27;
+  --c-inverse-primary: 19 78 74;
+  --c-secondary: 67 56 202;
+  --c-surface-container-lowest: 255 255 255;
+  --c-on-surface: 15 23 42;
+  --c-inverse-surface: 15 23 42;
+  --c-on-background: 15 23 42;
+  --c-tertiary-fixed: 186 230 253;
+  --c-error: 225 29 72;
+  --c-on-secondary-container: 255 255 255;
+  --c-surface-variant: 226 232 240;
+  --c-inverse-on-surface: 241 245 249;
+  --c-outline: 100 116 139;
+  --c-on-primary-fixed-variant: 17 94 89;
+  --c-on-tertiary-fixed-variant: 3 105 161;
+  --c-tertiary: 2 132 199;
+  --c-on-tertiary-container: 12 74 110;
+  --c-surface-tint: 15 118 110;
+  --c-surface-bright: 255 255 255;
+  --c-on-surface-variant: 71 85 105;
+  --c-secondary-fixed: 224 231 255;
+  --c-secondary-container: 67 56 202;
+  --c-surface-container-highest: 226 232 240;
+  --c-surface-container: 255 255 255;
+  --c-on-secondary-fixed-variant: 67 56 202;
+  --c-on-tertiary: 255 255 255;
+  --c-on-tertiary-fixed: 12 74 110;
+  --c-surface-container-high: 241 245 249;
+  --c-surface: 246 247 251;
+  --c-on-error: 255 255 255;
+  --c-surface-container-low: 255 255 255;
+  --c-primary: 15 118 110;
+  --c-on-primary-container: 19 78 74;
+  --c-outline-variant: 203 213 225;
+  --c-surface-dim: 241 245 249;
+  --c-background: 246 247 251;
+  --c-tertiary-container: 224 242 254;
+  --c-primary-fixed-dim: 94 234 212;
+  --c-primary-container: 204 251 241;
+  --c-on-secondary: 255 255 255;
+  --c-error-container: 254 226 226;
+  --c-on-primary-fixed: 4 47 46;
 }
 
 .glass-panel {
